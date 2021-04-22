@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package main
+package pkg
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 )
 
 type OrderSvc struct {
-	dao *orderDao.Dao
+	Dao *orderDao.Dao
 }
 
 func (svc *OrderSvc) CreateSo(ctx context.Context, reqs []*orderDao.SoMaster) (*orderDao.CreateSoResult, error) {
@@ -40,7 +40,7 @@ func (svc *OrderSvc) CreateSo(ctx context.Context, reqs []*orderDao.SoMaster) (*
 	val := attach[filter.SEATA_XID]
 	xid := val.(string)
 	// set transaction xid
-	soIds, err := svc.dao.CreateSO(
+	soIds, err := svc.Dao.CreateSO(
 		context.WithValue(context.Background(), mysql.XID, xid), reqs)
 
 	if err == nil {

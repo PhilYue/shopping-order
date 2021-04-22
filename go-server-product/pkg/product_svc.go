@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package main
+package pkg
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 )
 
 type ProductSvc struct {
-	dao *productDao.Dao
+	Dao *productDao.Dao
 }
 
 func (svc *ProductSvc) AllocateInventory(ctx context.Context, reqs []*productDao.AllocateInventoryReq) (*productDao.AllocateInventoryResult, error) {
@@ -40,7 +40,7 @@ func (svc *ProductSvc) AllocateInventory(ctx context.Context, reqs []*productDao
 	val := attach[filter.SEATA_XID]
 	xid := val.(string)
 	// set transaction xid
-	err := svc.dao.AllocateInventory(
+	err := svc.Dao.AllocateInventory(
 		context.WithValue(context.Background(), mysql.XID, xid), reqs)
 	if err == nil {
 		return &productDao.AllocateInventoryResult{true}, nil
