@@ -75,7 +75,7 @@ func main() {
 
 	time.Sleep(3e9)
 
-	fmt.Println(">>>是否开启 debug ：")
+	fmt.Print(">>> Enable debug (default `false`): ")
 	fmt.Scanln(&debuging)
 
 	if debuging {
@@ -83,55 +83,36 @@ func main() {
 	} else {
 
 		// commit success
-		//pkg.ProxySvc.CreateSo(context.TODO(), false)
+		pkg.ProxySvc.CreateSo(context.TODO(), false)
 
 		// rollback process
 		pkg.ProxySvc.CreateSo(context.TODO(), true)
 
 		initSignal()
 	}
-
-
-
-	// debug
-
-
-
 }
 
 func debug() {
 	for {
 		fmt.Println(">>>Begin the funny practice useing dubbogo and seata-golang!")
-		fmt.Print(">>>选择实战模式 `normal`-正常事务提交 or `exception`-异常事务回滚 ：")
+		fmt.Print(">>>Select mode `normal`-(distributed transaction commit success) or `exception`-(distributed transaction rollback):")
 		fmt.Scanln(&step)
 		if step == "normal" {
-			fmt.Println(">>>当前模式 `normal`-正常事务提交")
+			fmt.Println(">>>Current mode `normal`-(distributed transaction commit success)...")
 
 			// commit success
 			pkg.ProxySvc.CreateSoDebug(context.TODO(), false, true)
 
-			fmt.Println(">>>the distributed transaction has been committed!")
+			fmt.Println(">>>The distributed transaction has been committed!")
 		} else if step == "exception" {
-			fmt.Println(">>>当前模式 `exception`-异常事务回滚")
+			fmt.Println(">>>Current mode `normal`-(distributed transaction rollback)...")
 
 			// rollback process
 			pkg.ProxySvc.CreateSoDebug(context.TODO(), true, true)
 
-			fmt.Println(">>>simulation debug, let's see what happens...")
-			time.Sleep(time.Second * 10)
-			//select {}
-			fmt.Println(">>>simulation debug, input command `next` ")
-			// process next
-			fmt.Scanln(&command)
-			if command == "next" {
-				// commit or rollback
-			}
-
-			fmt.Println(">>>ok , maybe the distributed transaction has been rolled back, let's see what happens again...")
-			time.Sleep(time.Second * 10)
-			fmt.Println(">>>the distributed transaction has been rolled back!")
+			fmt.Println(">>>The distributed transaction has been rolled back!")
 		} else {
-			fmt.Println(">>>unknown command, maybe you want try the `normal` pattern or the `exception` pattern!\n\n\n")
+			fmt.Println(">>>Unknown command, maybe you want try the `normal` pattern or the `exception` pattern!\n\n\n")
 		}
 		step = ""
 	}

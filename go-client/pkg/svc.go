@@ -176,9 +176,9 @@ func (svc *Svc) CreateSoDebug(ctx context.Context, rollback bool, debuging bool)
 
 	if rollback {
 		if debuging {
-			fmt.Println(">>> 此处模拟异常回滚，可以查看数据库验证是否生成订单并且扣减库存......")
-			time.Sleep(time.Second * 5)
-			fmt.Println(">>> 输入任意或 Enter 程序正常执行，执行完毕后再次校验数据......")
+			fmt.Println(">>>Simulate an exception rollback here, so you can check the database to verify that the order was generated and the inventory is deducted...")
+			time.Sleep(time.Second * 3)
+			fmt.Println(">>>ENTER to continue...")
 			fmt.Scanln()
 		}
 		return nil, errors.New("there is a error")
