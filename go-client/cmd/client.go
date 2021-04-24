@@ -47,31 +47,94 @@ import (
 
 const (
 	SEATA_CONF_FILE = "SEATA_CONF_FILE"
+	CONF_CONSUMER_FILE_PATH = "CONF_CONSUMER_FILE_PATH"
+	APP_LOG_CONF_FILE = "APP_LOG_CONF_FILE"
 )
 
 var (
 	survivalTimeout int = 10e9
+	debuging bool = false
+	step, command string
+	sleeps int
 )
 
 // they are necessary:
 // 		export CONF_CONSUMER_FILE_PATH="xxx"
 // 		export APP_LOG_CONF_FILE="xxx"
 //      export SEATA_CONF_FILE="xxx"
+
 func main() {
+	// seata-golang init
 	confFile := os.Getenv(SEATA_CONF_FILE)
 	seataConfig.InitConf(confFile)
 	client.NewRpcClient()
 	tm.Implement(pkg.ProxySvc)
+
+	// dubbo-go init
 	config.Load()
+
 	time.Sleep(3e9)
 
-	// commit success
-	pkg.ProxySvc.CreateSo(context.TODO(), false)
+	fmt.Println(">>>是否开启 debug ：")
+	fmt.Scanln(&debuging)
 
-	// rollback
-	pkg.ProxySvc.CreateSo(context.TODO(), true)
+	if debuging {
+		debug()
+	} else {
 
-	initSignal()
+		// commit success
+		//pkg.ProxySvc.CreateSo(context.TODO(), false)
+
+		// rollback process
+		pkg.ProxySvc.CreateSo(context.TODO(), true)
+
+		initSignal()
+	}
+
+
+
+	// debug
+
+
+
+}
+
+func debug() {
+	for {
+		fmt.Println(">>>Begin the funny practice useing dubbogo and seata-golang!")
+		fmt.Print(">>>选择实战模式 `normal`-正常事务提交 or `exception`-异常事务回滚 ：")
+		fmt.Scanln(&step)
+		if step == "normal" {
+			fmt.Println(">>>当前模式 `normal`-正常事务提交")
+
+			// commit success
+			pkg.ProxySvc.CreateSoDebug(context.TODO(), false, true)
+
+			fmt.Println(">>>the distributed transaction has been committed!")
+		} else if step == "exception" {
+			fmt.Println(">>>当前模式 `exception`-异常事务回滚")
+
+			// rollback process
+			pkg.ProxySvc.CreateSoDebug(context.TODO(), true, true)
+
+			fmt.Println(">>>simulation debug, let's see what happens...")
+			time.Sleep(time.Second * 10)
+			//select {}
+			fmt.Println(">>>simulation debug, input command `next` ")
+			// process next
+			fmt.Scanln(&command)
+			if command == "next" {
+				// commit or rollback
+			}
+
+			fmt.Println(">>>ok , maybe the distributed transaction has been rolled back, let's see what happens again...")
+			time.Sleep(time.Second * 10)
+			fmt.Println(">>>the distributed transaction has been rolled back!")
+		} else {
+			fmt.Println(">>>unknown command, maybe you want try the `normal` pattern or the `exception` pattern!\n\n\n")
+		}
+		step = ""
+	}
 }
 
 func initSignal() {

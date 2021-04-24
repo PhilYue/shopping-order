@@ -20,6 +20,8 @@ package pkg
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 )
 
 import (
@@ -121,11 +123,75 @@ func (svc *Svc) CreateSo(ctx context.Context, rollback bool) ([]uint64, error) {
 	return createSoResult.SoSysNos, nil
 }
 
+func (svc *Svc) CreateSoDebug(ctx context.Context, rollback bool, debuging bool) ([]uint64, error) {
+	rootContext := ctx.(*seataContext.RootContext)
+	soMasters := []*orderDao.SoMaster{
+		{
+			BuyerUserSysNo:       10001,
+			SellerCompanyCode:    "SC001",
+			ReceiveDivisionSysNo: 110105,
+			ReceiveAddress:       "朝阳区长安街001号",
+			ReceiveZip:           "000001",
+			ReceiveContact:       "Hel",
+			ReceiveContactPhone:  "19999999999",
+			StockSysNo:           1,
+			PaymentType:          1,
+			SoAmt:                430.5,
+			Status:               10,
+			AppId:                "dk-order",
+			SoItems: []*orderDao.SoItem{
+				{
+					ProductSysNo:  1,
+					ProductName:   "北冰洋",
+					CostPrice:     200,
+					OriginalPrice: 232,
+					DealPrice:     215.25,
+					Quantity:      2,
+				},
+			},
+		},
+	}
+
+	reqs := []*productDao.AllocateInventoryReq{{
+		ProductSysNo: 1,
+		Qty:          2,
+	}}
+
+	var createSoResult = &orderDao.CreateSoResult{}
+	var allocateInventoryResult = &productDao.AllocateInventoryResult{}
+
+	err1 := orderSvc.CreateSo(context.WithValue(ctx, constant.AttachmentKey, map[string]interface{}{
+		filter.SEATA_XID: rootContext.GetXID(),
+	}), soMasters, createSoResult)
+	if err1 != nil {
+		return nil, err1
+	}
+
+	err2 := productSvc.AllocateInventory(context.WithValue(ctx, constant.AttachmentKey, map[string]string{
+		filter.SEATA_XID: rootContext.GetXID(),
+	}), reqs, allocateInventoryResult)
+	if err2 != nil {
+		return nil, err2
+	}
+
+	if rollback {
+		if debuging {
+			fmt.Println(">>> 此处模拟异常回滚，可以查看数据库验证是否生成订单并且扣减库存......")
+			time.Sleep(time.Second * 5)
+			fmt.Println(">>> 输入任意或 Enter 程序正常执行，执行完毕后再次校验数据......")
+			fmt.Scanln()
+		}
+		return nil, errors.New("there is a error")
+	}
+	return createSoResult.SoSysNos, nil
+}
+
 var service = &Svc{}
 
 type ProxyService struct {
 	*Svc
 	CreateSo func(ctx context.Context, rollback bool) ([]uint64, error)
+	CreateSoDebug func(ctx context.Context, rollback bool, debuging bool) ([]uint64, error)
 }
 
 var methodTransactionInfo = make(map[string]*tm.TransactionInfo)
@@ -134,6 +200,11 @@ func init() {
 	methodTransactionInfo["CreateSo"] = &tm.TransactionInfo{
 		TimeOut:     60000000,
 		Name:        "CreateSo",
+		Propagation: tm.REQUIRED,
+	}
+	methodTransactionInfo["CreateSoDebug"] = &tm.TransactionInfo{
+		TimeOut:     60000000,
+		Name:        "CreateSoDebug",
 		Propagation: tm.REQUIRED,
 	}
 }
