@@ -105,7 +105,7 @@ func debug() {
 
 			fmt.Println(">>>The distributed transaction has been committed!")
 		} else if step == "exception" {
-			fmt.Println(">>>Current mode `normal`-(distributed transaction rollback)...")
+			fmt.Println(">>>Current mode `exception`-(distributed transaction rollback)...")
 
 			// rollback process
 			pkg.ProxySvc.CreateSoDebug(context.TODO(), true, true)
