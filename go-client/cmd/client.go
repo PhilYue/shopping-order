@@ -53,7 +53,7 @@ const (
 
 var (
 	survivalTimeout int = 10e9
-	debuging bool = false
+	debuging bool = true
 	step, command string
 	sleeps int
 )
@@ -75,7 +75,7 @@ func main() {
 
 	time.Sleep(3e9)
 
-	fmt.Print(">>> Enable debug (default `false`): ")
+	fmt.Print(">>> Enable debug (default `true`): ")
 	fmt.Scanln(&debuging)
 
 	if debuging {
